@@ -2,15 +2,220 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/Dashboard.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Analytics Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Dingo - Tutor Bot</title>
+    <link rel="stylesheet" href="src/styles.css" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <div class="app-shell">
+      <div class="chat-container is-hidden" id="chat-panel">
+        <!-- Header -->
+        <div class="chat-header">
+          <div class="header-top">
+            <div class="header-copy">
+              <img class="header-logo" src="./src/assets/fox.png" alt="Dingo" />
+              <div class="header-title">
+                <h1>Dingo</h1>
+              </div>
+            </div>
+            <div class="header-links">
+              <a
+                class="header-contact-link"
+                id="refresh-btn"
+                type="button"
+                title="Start a new chat"
+                aria-label="Start a new chat"
+              >
+                <span>+</span> New Chat
+              </a>
+              <a
+                class="header-contact-link icon"
+                href="tel:+61862587100"
+                target="_blank"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M22 16.5v3a2 2 0 0 1-2.2 2 18 18 0 0 1-7.8-2.8 18 18 0 0 1-5.6-5.6A18 18 0 0 1 3.5 4.2 2 2 0 0 1 5.5 2h3a2 2 0 0 1 2 1.6c.15.9.4 1.8.75 2.6a2 2 0 0 1-.45 2.1L9.5 9.7a14.5 14.5 0 0 0 4.8 4.8l1.4-1.35a2 2 0 0 1 2.1-.45c.8.35 1.7.6 2.6.75a2 2 0 0 1 1.6 2z"
+                  />
+                </svg>
+              </a>
+              <a
+                class="header-contact-link icon"
+                href="mailto:customerservice@richgro.com.au"
+                target="_blank"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <!-- Envelope body -->
+                  <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+
+                  <!-- Flap -->
+                  <path d="M3 7l9 6 9-6"></path>
+                </svg>
+                <!-- <span>Email: customerservice@richgro.com.au</span> -->
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Messages Area -->
+        <div class="chat-messages" id="messages-container">
+          <!-- Initial greeting -->
+          <div class="message-wrapper assistant-wrapper">
+            <div class="message assistant">
+              <strong>Hi, I'm Dingo, your learning partner.</strong>
+              I'll guide you to the right videos, help you learn and grow your
+              skills in Mathematics.
+            </div>
+          </div>
+          <!-- Loading indicator -->
+          <div id="loading-indicator" class="loading-indicator hidden">
+            <span class="loading">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Quick Actions (shown on first message) -->
+        <!-- <div id="quick-actions" class="quick-actions">
+          <button class="quick-action-btn" data-action="product">
+            I need to find/purchase a product
+          </button>
+          <button class="quick-action-btn" data-action="help">
+            I need help with an existing product
+          </button>
+        </div> -->
+
+        <!-- Input Area -->
+        <div class="chat-input-area">
+          <!-- Privacy Policy Notice -->
+          <div class="privacy-notice" id="privacy-notice">
+            <span>
+              By chatting, you agree to our
+              <a
+                href="https://www.richgro.com.au/privacy-policy/"
+                target="_blank"
+                >privacy policy</a
+              >.
+            </span>
+            <button class="close-privacy" id="close-privacy">×</button>
+          </div>
+
+          <!-- Input Shell -->
+          <div class="input-shell">
+            <input
+              type="text"
+              class="chat-input"
+              id="chat-input"
+              placeholder="Message..."
+              autocomplete="off"
+            />
+            <button id="send-btn" class="send-btn" title="Send message">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#f1f1f1"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="12" y1="19" x2="12" y2="5"></line>
+                <polyline points="5 12 12 5 19 12"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <button
+        class="chat-launcher"
+        id="chat-launcher"
+        type="button"
+        aria-expanded="false"
+        aria-label="Open chatbot"
+      >
+        <img
+          class="launcher-icon-open"
+          src="./src/assets/fox.png"
+          alt="Open Dingo chat"
+        />
+        <svg
+          class="launcher-icon-close"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Lead Form (hidden template - injected by JS after first exchange) -->
+    <div
+      id="lead-form-container"
+      class="message-wrapper assistant-wrapper"
+      style="display: none"
+    >
+      <form id="lead-form" class="lead-form" style="width: 280px">
+        <div class="lead-form-top">
+          <!-- <h3>Get More Help</h3> -->
+          <button
+            type="button"
+            class="lead-form-close"
+            id="lead-form-close"
+            aria-label="Close lead form"
+            title="Close"
+          >
+            &times;
+          </button>
+        </div>
+        <!-- <p class="lead-form-copy">
+          Share your details if you'd like our team to follow up with you.
+        </p> -->
+        <div class="form-group">
+          <p>Name</p>
+          <input
+            type="text"
+            id="lead-name"
+            placeholder="Please enter your name"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <p>Email</p>
+          <input
+            type="email"
+            id="lead-email"
+            placeholder="Please enter your email"
+            required
+          />
+        </div>
+        <button type="submit" class="submit-btn">Submit</button>
+      </form>
+    </div>
+
+    <!-- Scripts -->
+    <script src="env.js?v=2"></script>
+    <script src="src/chat.js?v=21"></script>
   </body>
 </html>
