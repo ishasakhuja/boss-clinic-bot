@@ -5,8 +5,10 @@
 
 // Configuration
 const CONFIG = {
-  API_URL: (window.ENV && window.ENV.API_URL) || "http://localhost:8000", // Backend URL - via env.js or updated
-  CHAT_ENDPOINT: "/chat",
+  // Chatbase proxy endpoint (relative URL — works in both dev and production)
+  CHATBASE_PROXY_URL: "/api/chatbase/chat",
+  // Legacy backend URL — still used for lead, feedback, session, and history
+  API_URL: (window.ENV && window.ENV.API_URL) || "http://localhost:8000",
   SESSION_ENDPOINT: "/new-session",
   LEAD_ENDPOINT: "/lead",
   FEEDBACK_ENDPOINT: "/feedback",
@@ -15,6 +17,7 @@ const CONFIG = {
 // State management
 let state = {
   sessionId: null,
+  conversationId: null, // Chatbase conversation ID for multi-turn context
   messages: [],
   isLoading: false,
   leadFormVisible: false,
@@ -29,6 +32,7 @@ const TIME_UPDATE_INTERVAL_MS = 20000;
 const NETWORK_RETRY_DELAY_MS = 1200;
 const NETWORK_RETRY_ATTEMPTS = 2;
 const SESSION_ID_STORAGE_KEY = "sprout_session_id";
+const CONVERSATION_ID_STORAGE_KEY = "chatbase_conversation_id";
 
 const isEmbeddedFrame = (() => {
   try {
@@ -467,19 +471,21 @@ async function handleSendMessage() {
   setLoading(true);
 
   try {
+    // Build the request payload for Chatbase proxy
+    const chatPayload = {
+      message,
+      ...(state.conversationId ? { conversationId: state.conversationId } : {}),
+    };
+
     const response = await fetchWithNetworkRetry(
-      `${CONFIG.API_URL}/chat/stream`,
+      CONFIG.CHATBASE_PROXY_URL,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...getSessionHeaders(),
         },
-        credentials: "include",
         signal: abortController.signal,
-        body: JSON.stringify({
-          query: message,
-        }),
+        body: JSON.stringify(chatPayload),
       },
     );
 
@@ -517,36 +523,9 @@ async function handleSendMessage() {
 
       const chunk = decoder.decode(value, { stream: true });
 
-      // Handle SSE format: "data: ..."
-      const lines = chunk.split("\n");
-      for (let line of lines) {
-        if (!line.startsWith("data:")) continue;
-
-        const rawPayload = line.replace("data:", "").trim();
-
-        // Metadata event
-        if (rawPayload.startsWith("[META]")) {
-          try {
-            const meta = JSON.parse(rawPayload.replace("[META]", ""));
-            if (requestId === state.activeRequestId && meta.session_id) {
-              state.sessionId = meta.session_id;
-              state.sessionIdIsGenerated = false;
-              persistSessionId(state.sessionId);
-            }
-          } catch (e) {}
-          continue;
-        }
-
-        // End marker
-        if (rawPayload === "[DONE]") continue;
-
-        try {
-          const payload = JSON.parse(rawPayload);
-          assistantText += payload;
-        } catch (e) {
-          assistantText += rawPayload;
-        }
-      }
+      // Chatbase streams raw text (not SSE data: lines)
+      // Append the chunk directly to the assistant text
+      assistantText += chunk;
 
       if (requestId !== state.activeRequestId) return;
 
@@ -933,11 +912,11 @@ function findPreviousUserMessage() {
  * Show/hide quick actions
  */
 function hideQuickActions() {
-  quickActionsContainer.classList.add("hidden");
+  if (quickActionsContainer) quickActionsContainer.classList.add("hidden");
 }
 
 function showQuickActions() {
-  quickActionsContainer.classList.remove("hidden");
+  if (quickActionsContainer) quickActionsContainer.classList.remove("hidden");
 }
 
 /**
@@ -1109,6 +1088,11 @@ async function handleNewSession() {
   }
 
   clearStoredSessionId();
+  // Also clear Chatbase conversation ID for a fresh conversation
+  state.conversationId = null;
+  try {
+    localStorage.removeItem(CONVERSATION_ID_STORAGE_KEY);
+  } catch (e) {}
   state.sessionId = generateSessionId();
   state.sessionIdIsGenerated = false;
   persistSessionId(state.sessionId);
