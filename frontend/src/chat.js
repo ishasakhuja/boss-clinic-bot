@@ -183,19 +183,19 @@ function init() {
         setChatVisibility(true);
         return;
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 
   if (chatLauncher && chatPanel) {
     setChatVisibility(false);
     try {
       chatLauncher.focus();
-    } catch (e) {}
+    } catch (e) { }
   } else {
     if (chatPanel) chatPanel.classList.remove("is-hidden");
     try {
       chatInput.focus();
-    } catch (e) {}
+    } catch (e) { }
   }
 }
 
@@ -245,13 +245,13 @@ function persistSessionId(sessionId) {
   if (!sessionId) return;
   try {
     localStorage.setItem(SESSION_ID_STORAGE_KEY, sessionId);
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function clearStoredSessionId() {
   try {
     localStorage.removeItem(SESSION_ID_STORAGE_KEY);
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function getSessionHeaders() {
@@ -280,22 +280,22 @@ function setChatVisibility(isOpen) {
   if (isEmbeddedFrame) {
     try {
       sessionStorage.setItem("sprout_chat_open", isOpen ? "1" : "0");
-    } catch (e) {}
+    } catch (e) { }
     try {
       window.parent.postMessage({ type: "sprout:toggle", isOpen }, "*");
-    } catch (e) {}
+    } catch (e) { }
   }
 
   if (isOpen) {
     setTimeout(() => {
       try {
         chatInput.focus();
-      } catch (e) {}
+      } catch (e) { }
     }, 0);
   } else {
     try {
       chatLauncher.focus();
-    } catch (e) {}
+    } catch (e) { }
   }
 }
 
@@ -517,7 +517,7 @@ async function handleSendMessage() {
       if (requestId !== state.activeRequestId) {
         try {
           await reader.cancel();
-        } catch (e) {}
+        } catch (e) { }
         return;
       }
 
@@ -555,9 +555,9 @@ async function handleSendMessage() {
       (entry) => entry.role === "user",
     ).length;
 
-    if (userMessageCount === 1 && !state.leadFormVisible) {
-      showLeadForm();
-    }
+    // if (userMessageCount === 1 && !state.leadFormVisible) {
+    //   showLeadForm();
+    // }
   } catch (error) {
     if (isAbortError(error) || requestId !== state.activeRequestId) {
       return;
@@ -575,7 +575,7 @@ async function handleSendMessage() {
       state.streamAbortController = null;
       try {
         chatInput.focus();
-      } catch (e) {}
+      } catch (e) { }
     }
   }
 }
@@ -658,15 +658,15 @@ function startRelativeTimeUpdates() {
 }
 
 function appendAssistantExtras(wrapperDiv, content, messageTime = new Date()) {
-  if (/contact/i.test(content)) {
-    const contactBtn = document.createElement("a");
-    contactBtn.href = "https://www.richgro.com.au/contact-us/";
-    contactBtn.target = "_blank";
-    contactBtn.rel = "noopener";
-    contactBtn.className = "contact-us-btn";
-    contactBtn.textContent = "Contact Us";
-    wrapperDiv.appendChild(contactBtn);
-  }
+  // if (/contact/i.test(content)) {
+  //   const contactBtn = document.createElement("a");
+  //   contactBtn.href = "";
+  //   contactBtn.target = "_blank";
+  //   contactBtn.rel = "noopener";
+  //   contactBtn.className = "contact-us-btn";
+  //   contactBtn.textContent = "Contact Us";
+  //   wrapperDiv.appendChild(contactBtn);
+  // }
 
   const actionsRow = document.createElement("div");
   actionsRow.className = "message-actions";
@@ -813,7 +813,18 @@ function formatInlineMarkdown(text) {
 }
 
 function parseLinksInText(text) {
-  const lines = text.split(/\r?\n/);
+  let videoIframes = "";
+
+  // Extract and remove mp4 videos (bare URLs or markdown links)
+  const mp4Regex = /(?:\[[^\]]*\]\()?(https?:\/\/[^\s)\]]+\.mp4(?:[^\s)\]]*))(?:\))?/gi;
+
+  let cleanText = text.replace(mp4Regex, (match, videoUrl) => {
+    // Collect the video player
+    videoIframes += `<div class="chat-video-container" style="margin-top: 12px; border-radius: 8px; overflow: hidden; width: 100%;"><video src="${videoUrl}" controls style="width: 100%; height: auto; border: 0; display: block; background: #000;"></video></div>`;
+    return ""; // Remove from text
+  });
+
+  const lines = cleanText.split(/\r?\n/);
   const result = [];
   let paragraphLines = [];
   let inUl = false;
@@ -893,7 +904,7 @@ function parseLinksInText(text) {
   flushParagraph();
   closeLists();
 
-  return result.join("\n");
+  return result.join("\n") + videoIframes;
 }
 
 /**
@@ -1092,7 +1103,7 @@ async function handleNewSession() {
   state.conversationId = null;
   try {
     localStorage.removeItem(CONVERSATION_ID_STORAGE_KEY);
-  } catch (e) {}
+  } catch (e) { }
   state.sessionId = generateSessionId();
   state.sessionIdIsGenerated = false;
   persistSessionId(state.sessionId);
@@ -1101,7 +1112,7 @@ async function handleNewSession() {
   setChatVisibility(true);
   try {
     chatInput.focus();
-  } catch (e) {}
+  } catch (e) { }
 }
 
 /**
